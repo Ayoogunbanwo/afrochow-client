@@ -1,91 +1,133 @@
-"use client";
-import { useState } from "react";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/toast";
+"use client"
 
-const PickupSelector = () => {
-  const [date, setDate] = useState(null);
-  const [time, setTime] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const { toast } = useToast();
+import React, { useState, useMemo } from "react"
+import { format, isBefore, startOfDay, addDays, isWeekend } from "date-fns"
+import { Clock } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
 
-  // Generate time slots from 10 AM to 9 PM
-  const timeSlots = Array.from({ length: 12 }, (_, i) => {
-    const hour = i + 10;
-    return `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`;
-  });
+function PickupSelector({ onScheduled }) {
+  const [date, setDate] = useState(null)
+  const [time, setTime] = useState(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const { toast } = useToast()
 
-  const handleConfirm = () => {
+  const timeSlots = useMemo(() => {
+    if (!date) return []
+
+    const slots = []
+    const now = new Date()
+    const isToday = startOfDay(date).getTime() === startOfDay(now).getTime()
+    const currentHour = now.getHours()
+    
+    const startHour = isWeekend(date) ? 10 : 9
+    const endHour = isWeekend(date) ? 16 : 18
+
+    for (let hour = startHour; hour < endHour; hour++) {
+      if (isToday && hour <= currentHour) continue
+
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeString = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`
+        slots.push(timeString)
+      }
+    }
+    return slots
+  }, [date])
+
+  function handleConfirm() {
     if (!date || !time) {
       toast({
         variant: "destructive",
-        title: "Please select both date and time",
-        description: "A pickup date and time are required"
-      });
-      return;
+        title: "Incomplete Selection",
+        description: "Please select both a pickup date and time."
+      })
+      return
     }
 
+    const formattedDate = format(date, "MMMM d, yyyy")
     toast({
-      title: "Pickup time confirmed",
-      description: `Your order will be ready for pickup on ${date.toLocaleDateString()} at ${time}`
-    });
+      title: "Pickup Scheduled",
+      description: `Your pickup is set for ${formattedDate} at ${time}.`
+    })
 
-    setIsOpen(false);
-  };
+    onScheduled?.(formattedDate, time)
+    setIsOpen(false)
+  }
+
+  function isDateDisabled(date) {
+    return isBefore(startOfDay(date), startOfDay(new Date())) || 
+           isBefore(addDays(new Date(), 14), startOfDay(date))
+  }
+
+  const buttonText = date && time
+    ? `Pickup on ${format(date, "MMM d")} at ${time}`
+    : "Select Pickup Time"
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full mt-4">
-          Select Pickup Time
+        <Button variant="outline" className="w-full flex items-center justify-center gap-2">
+          <Clock className="h-4 w-4" />
+          {buttonText}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Choose Pickup Date & Time</DialogTitle>
+          <DialogTitle>Schedule Pickup Time</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={setDate}
-            disabled={(date) => date < new Date()}
-            className="border rounded-md"
-          />
-          <Select value={time} onValueChange={setTime}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select time" />
-            </SelectTrigger>
-            <SelectContent>
-              {timeSlots.map((slot) => (
-                <SelectItem key={slot} value={slot}>
-                  {slot}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button onClick={handleConfirm} className="w-full">
-            Confirm Pickup Time
+
+        <div className="grid gap-4 py-4">
+          <div className="flex flex-col gap-2">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              disabled={isDateDisabled}
+              initialFocus
+              className="rounded-md border"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Select
+              value={time}
+              onValueChange={setTime}
+              disabled={!date}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={date ? "Select time" : "Choose a date first"} />
+              </SelectTrigger>
+              <SelectContent>
+                {timeSlots.length > 0 ? (
+                  timeSlots.map(slot => (
+                    <SelectItem key={slot} value={slot}>
+                      {slot}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem disabled value="no-slots">
+                    No available time slots
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            onClick={handleConfirm}
+            disabled={!date || !time}
+            className="w-full mt-2"
+          >
+            Confirm Pickup
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default PickupSelector;
+export default PickupSelector

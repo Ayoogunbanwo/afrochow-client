@@ -1,359 +1,388 @@
-"use client";
+"use client"
 
-import { useCart } from "@/app/context/Cartcontext";
-import { useUserContext } from "@/app/context/Usercontext";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { ShoppingBag, Plus, Minus, Trash2, ArrowLeft, Package, Truck } from "lucide-react";
-import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useCart } from "@/app/context/Cartcontext"
+import { useUserContext } from "@/app/context/Usercontext"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
+import { ShoppingBag, Plus, Minus, Trash2, ArrowLeft, Package, Truck, CreditCard } from "lucide-react"
+import PickupSelector from "@/components/Pickupselector"
+
+const provinces = [
+  { code: "AB", name: "Alberta" },
+  { code: "BC", name: "British Columbia" },
+  { code: "MB", name: "Manitoba" },
+  { code: "NB", name: "New Brunswick" },
+  { code: "NL", name: "Newfoundland and Labrador" },
+  { code: "NS", name: "Nova Scotia" },
+  { code: "NT", name: "Northwest Territories" },
+  { code: "NU", name: "Nunavut" },
+  { code: "ON", name: "Ontario" },
+  { code: "PE", name: "Prince Edward Island" },
+  { code: "QC", name: "Quebec" },
+  { code: "SK", name: "Saskatchewan" },
+  { code: "YT", name: "Yukon" },
+]
 
 const CartPage = () => {
-  const { cart, removeFromCart, updateCartItemQuantity, summary } = useCart();
-  const { deliveryFee, filterByStoreId, deliverytime } = useUserContext();
+  const { cart, removeFromCart, updateCartItemQuantity, summary } = useCart()
+  const { deliveryFee, filterByStoreId, deliverytime } = useUserContext()
 
-  const [mounted, setMounted] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [deliveryOption, setDeliveryOption] = useState('pickup');
+  const [mounted, setMounted] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [deliveryOption, setDeliveryOption] = useState("pickup")
+  const [pickupDetails, setPickupDetails] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [deliveryData, setDeliveryData] = useState({
-    street: '',
-    city: '',
-    province: '',
-    postalCode: '',
-    instructions: '',
-    phoneNumber: '',
-  });
-
-  const provinces = [
-    { code: 'AB', name: 'Alberta' },
-    { code: 'BC', name: 'British Columbia' },
-    { code: 'MB', name: 'Manitoba' },
-    { code: 'NB', name: 'New Brunswick' },
-    { code: 'NL', name: 'Newfoundland and Labrador' },
-    { code: 'NS', name: 'Nova Scotia' },
-    { code: 'NT', name: 'Northwest Territories' },
-    { code: 'NU', name: 'Nunavut' },
-    { code: 'ON', name: 'Ontario' },
-    { code: 'PE', name: 'Prince Edward Island' },
-    { code: 'QC', name: 'Quebec' },
-    { code: 'SK', name: 'Saskatchewan' },
-    { code: 'YT', name: 'Yukon' }
-  ];
+    street: "",
+    city: "",
+    province: "",
+    postalCode: "",
+    instructions: "",
+    phoneNumber: "",
+  })
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (cart.length > 0) {
-      filterByStoreId(cart[0]?.storeId);
+      filterByStoreId(cart[0]?.storeId)
     }
-  }, [cart, filterByStoreId]);
+  }, [cart, filterByStoreId])
+
+  useEffect(() => {
+    if (deliveryOption !== "pickup") {
+      setPickupDetails(null)
+    }
+  }, [deliveryOption])
 
   const handleQuantityUpdate = async (itemId, newQuantity) => {
     if (newQuantity < 1) {
-      handleRemoveItem(itemId);
-      return;
+      await handleRemoveItem(itemId)
+      return
     }
-    setIsUpdating(true);
+    setIsUpdating(true)
     try {
-      await updateCartItemQuantity(itemId, newQuantity);
+      await updateCartItemQuantity(itemId, newQuantity)
     } finally {
-      setIsUpdating(false);
+      setIsUpdating(false)
     }
-  };
-
-  const handleRemoveItem = async (itemId) => {
-    setIsUpdating(true);
-    try {
-      await removeFromCart(itemId);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleDeliveryDataChange = (e) => {
-    const { name, value } = e.target;
-    setDeliveryData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const formatPostalCode = (input) => {
-    let cleaned = input.replace(/[^\w]/g, '').toUpperCase();
-    if (cleaned.length > 3) {
-      cleaned = cleaned.slice(0, 3) + ' ' + cleaned.slice(3, 6);
-    }
-    return cleaned;
-  };
-
-  const handlePostalCodeChange = (e) => {
-    const formatted = formatPostalCode(e.target.value);
-    setDeliveryData((prevData) => ({
-      ...prevData,
-      postalCode: formatted,
-    }));
-  };
-
-  if (!mounted) {
-    return null;
   }
 
-  const deliveryFeeAdjusted = deliveryOption === 'pickup' ? 0 : deliveryFee;
+  const handleRemoveItem = async (itemId) => {
+    setIsUpdating(true)
+    try {
+      await removeFromCart(itemId)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleCheckout = async () => {
+    setIsProcessing(true)
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    setIsProcessing(false)
+    // Handle checkout logic here
+  }
+
+  const handleDeliveryDataChange = (e) => {
+    const { name, value } = e.target
+    setDeliveryData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handlePostalCodeChange = (e) => {
+    const cleaned = e.target.value.replace(/[^\w]/g, "").toUpperCase()
+    const formatted = cleaned.length > 3 ? `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)}` : cleaned
+    setDeliveryData((prev) => ({ ...prev, postalCode: formatted }))
+  }
+
+  const handlePickupScheduled = (date, time) => {
+    setPickupDetails({ date, time })
+  }
+
+  if (!mounted) return null
+
+  const deliveryFeeAdjusted = deliveryOption === "delivery" ? deliveryFee : 0
+  const total = Number(summary?.total || 0) + deliveryFeeAdjusted
+
+  const isCheckoutDisabled =
+    cart.length === 0 ||
+    (deliveryOption === "pickup" && !pickupDetails) ||
+    (deliveryOption === "delivery" &&
+      (!deliveryData.street ||
+        !deliveryData.city ||
+        !deliveryData.province ||
+        !deliveryData.postalCode ||
+        !deliveryData.phoneNumber))
+
+  const renderCartItems = () => (
+    <div className="space-y-6">
+      {cart.map((item) => (
+        <div
+          key={item.itemid}
+          className="flex flex-col justify-between p-5 transition-all duration-200 border border-gray-200 rounded-xl sm:flex-row sm:items-center hover:shadow-md"
+        >
+          <div className="mb-3 sm:mb-0">
+            <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
+            <p className="font-medium text-black">${Number(item.price).toFixed(2)}</p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center p-1 bg-gray-100 rounded-lg">
+              <Button
+                onClick={() => handleQuantityUpdate(item.itemid, item.quantity - 1)}
+                variant="ghost"
+                size="icon"
+                className="transition-colors hover:bg-gray-200"
+                disabled={isUpdating || item.quantity <= 1}
+              >
+                <Minus className="w-4 h-4" />
+              </Button>
+              <span className="w-8 font-medium text-center">{item.quantity}</span>
+              <Button
+                onClick={() => handleQuantityUpdate(item.itemid, item.quantity + 1)}
+                variant="ghost"
+                size="icon"
+                className="transition-colors hover:bg-gray-200"
+                disabled={isUpdating || item.quantity >= 10}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            <Button
+              onClick={() => handleRemoveItem(item.itemid)}
+              variant="ghost"
+              size="icon"
+              className="ml-2 text-red-500 transition-colors hover:bg-red-50"
+              disabled={isUpdating}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
+  const renderDeliveryForm = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="street">Street Address</Label>
+          <input
+            id="street"
+            name="street"
+            value={deliveryData.street}
+            onChange={handleDeliveryDataChange}
+            placeholder="Enter street address"
+            className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors bg-orange-50"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="city">City</Label>
+          <input
+            id="city"
+            name="city"
+            value={deliveryData.city}
+            onChange={handleDeliveryDataChange}
+            placeholder="Enter city"
+            className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors bg-orange-50"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="province">Province</Label>
+          <select
+            id="province"
+            name="province"
+            value={deliveryData.province}
+            onChange={handleDeliveryDataChange}
+            className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors bg-orange-50"
+          >
+            <option value="">Select Province</option>
+            {provinces.map((province) => (
+              <option key={province.code} value={province.code}>
+                {province.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="postalCode">Postal Code</Label>
+          <input
+            id="postalCode"
+            name="postalCode"
+            value={deliveryData.postalCode}
+            onChange={handlePostalCodeChange}
+            placeholder="Enter postal code"
+            maxLength={7}
+            className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors bg-orange-50"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="phoneNumber">Phone Number</Label>
+        <input
+          id="phoneNumber"
+          name="phoneNumber"
+          value={deliveryData.phoneNumber}
+          onChange={handleDeliveryDataChange}
+          placeholder="Enter phone number"
+          className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors bg-orange-50"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
+        <textarea
+          id="instructions"
+          name="instructions"
+          value={deliveryData.instructions}
+          onChange={handleDeliveryDataChange}
+          placeholder="Add any special delivery instructions..."
+          className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-colors bg-orange-50"
+          rows={3}
+        />
+      </div>
+    </div>
+  )
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100">
       <div className="container max-w-4xl px-4 py-8 mx-auto">
-        {cart.length > 0 && (
-          <Link 
-            href={`/restaurant/store/${cart[0]?.storeId}`} 
-            className="inline-flex items-center mb-6 text-gray-600 transition-colors hover:text-gray-900"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            <span className="text-lg">Continue Shopping</span>
+        <div className="flex items-center mb-6 space-x-2">
+          <Link href="/store" className="flex items-center text-gray-600 hover:text-gray-900">
+            <ArrowLeft className="w-5 h-5 mr-1" />
+            Back to Store
           </Link>
-        )}
+        </div>
 
         <Card className="overflow-hidden bg-white shadow-xl rounded-xl">
-          <div className="p-6 bg-black">
-            <h2 className="flex items-center mb-1 space-x-3 text-2xl font-bold text-white">
-              <ShoppingBag className="w-7 h-7" />
-              <span>Your Shopping Cart</span>
-            </h2>
-            <p className="ml-10 text-gray-300">Complete your order with ease</p>
-          </div>
-          
           <CardContent className="p-6">
-            {cart.length === 0 ? (
-              <div className="py-16 text-center">
-                <ShoppingBag className="w-16 h-16 mx-auto mb-6 text-gray-300" />
-                <p className="mb-6 text-xl text-gray-500">Your cart is empty</p>
-                <Link href="/restaurant/store">
-                  <Button variant="outline" className="px-8 py-2 text-lg transition-colors hover:bg-gray-50">
-                    Start Shopping
-                  </Button>
+            <div className="flex items-center mb-6 space-x-2">
+              <ShoppingBag className="w-6 h-6 text-orange-500" />
+              <h3 className="text-2xl font-semibold text-gray-800">Your Cart</h3>
+            </div>
+
+            {cart.length > 0 ? (
+              renderCartItems()
+            ) : (
+              <div className="p-8 text-center">
+                <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">Your cart is empty.</p>
+                <Link href="/store">
+                  <Button className="mt-4">Continue Shopping</Button>
                 </Link>
               </div>
-            ) : (
-              <div className="space-y-6">
-                {cart.map((cartItem) => (
-                  <div 
-                    key={cartItem.itemid} 
-                    className="flex flex-col justify-between p-5 transition-all duration-200 border border-gray-200 rounded-xl sm:flex-row sm:items-center hover:bg-gray-50"
-                  >
-                    <div className="mb-3 sm:mb-0">
-                      <h3 className="text-lg font-semibold text-gray-800">{cartItem.name}</h3>
-                      <p className="font-medium text-black">${Number(cartItem.price).toFixed(2)}</p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Button
-                        onClick={() => handleQuantityUpdate(cartItem.itemid, cartItem.quantity - 1)}
-                        variant="outline"
-                        size="icon"
-                        className="transition-colors hover:bg-gray-100"
-                        disabled={isUpdating || cartItem.quantity <= 1}
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                      <span className="w-8 font-medium text-center">{cartItem.quantity}</span>
-                      <Button
-                        onClick={() => handleQuantityUpdate(cartItem.itemid, cartItem.quantity + 1)}
-                        variant="outline"
-                        size="icon"
-                        className="transition-colors hover:bg-gray-100"
-                        disabled={isUpdating || cartItem.quantity >= 10}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={() => handleRemoveItem(cartItem.itemid)}
-                        variant="outline"
-                        size="icon"
-                        className="ml-2 text-red-500 transition-colors hover:bg-red-50 hover:border-red-200"
-                        disabled={isUpdating}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+            )}
+
+            {cart.length > 0 && (
+              <>
+                <div className="p-6 mt-8 space-y-6 bg-orange-50 rounded-xl">
+                  <div className="flex items-center space-x-2">
+                    <Package className="w-6 h-6 text-orange-500" />
+                    <h3 className="text-xl font-semibold text-gray-800">Delivery Options</h3>
+                    <div>
+                      <span className="text-sm text-gray-500">Please select a delivery option</span>
                     </div>
                   </div>
-                ))}
 
-                <div className="p-6 mt-8 space-y-6 bg-gray-50 rounded-xl">
-                  <h3 className="text-xl font-semibold text-gray-800">Delivery Options</h3>
                   <RadioGroup
                     value={deliveryOption}
                     onValueChange={setDeliveryOption}
                     className="grid grid-cols-1 gap-4 md:grid-cols-2"
                   >
                     <div>
-                      <RadioGroupItem
-                        value="pickup"
-                        id="pickup"
-                        className="sr-only peer"
-                      />
+                      <RadioGroupItem value="pickup" id="pickup" className="sr-only peer" />
                       <Label
                         htmlFor="pickup"
-                        className="flex flex-col items-center justify-between p-4 text-center border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 peer-checked:border-black peer-checked:bg-gray-50"
+                        className={`flex flex-col items-center justify-between p-4 text-center border-2 rounded-lg cursor-pointer transition-all duration-200 hover:border-orange-200 peer-checked:border-orange-500 peer-checked:bg-orange-100 ${deliveryOption === "pickup" ? "bg-orange-100 shadow-md" : "bg-white"}`}
                       >
-                        <Package className="w-6 h-6 mb-2" />
+                        <Package className="w-6 h-6 mb-2 text-orange-500" />
                         <div className="font-semibold">Pickup</div>
-                        <span className="mt-2 text-sm text-center text-gray-500">{deliverytime} - {deliverytime + 10} Minutes</span>
+                        <PickupSelector onScheduled={handlePickupScheduled} />
+                        {pickupDetails && (
+                          <p className="mt-2 text-sm text-green-600">
+                            ✓ Pickup scheduled for {pickupDetails.date} at {pickupDetails.time}
+                          </p>
+                        )}
                       </Label>
                     </div>
 
                     <div>
-                      <RadioGroupItem
-                        value="delivery"
-                        id="delivery"
-                        className="sr-only peer"
-                      />
+                      <RadioGroupItem value="delivery" id="delivery" className="sr-only peer" />
                       <Label
                         htmlFor="delivery"
-                        className="flex flex-col items-center justify-between p-4 text-center border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 peer-checked:border-black peer-checked:bg-gray-50"
+                        className={`flex flex-col items-center justify-between p-4 text-center border-2 rounded-lg cursor-pointer transition-all duration-200 hover:border-orange-200 peer-checked:border-orange-500 peer-checked:bg-orange-100 ${deliveryOption === "delivery" ? "bg-orange-100 shadow-md" : "bg-white"}`}
                       >
-                        <Truck className="w-6 h-6 mb-2" />
+                        <Truck className="w-6 h-6 mb-2 text-orange-500" />
                         <div className="font-semibold">Delivery</div>
-                        <span className="mt-2 text-sm text-gray-500">${deliveryFee.toFixed(2)} fee</span>
+                        {renderDeliveryForm()}
                       </Label>
                     </div>
                   </RadioGroup>
 
-                  {deliveryOption === 'delivery' && (
-                    <div className="mt-6 space-y-4">
-                      <div>
-                        <label className="block mb-2 font-medium text-gray-700">Street Address</label>
-                        <input 
-                          type="text" 
-                          name="street" 
-                          value={deliveryData.street} 
-                          onChange={handleDeliveryDataChange}
-                          placeholder="Street number and name"
-                          className="w-full p-3 transition-all border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black" 
-                          required
-                        />
+                  <div className="p-4 space-y-3 bg-white rounded-lg">
+                    <div className="flex justify-between text-lg text-gray-800">
+                      <span>Subtotal</span>
+                      <span className="font-semibold">${Number(summary?.total || 0).toFixed(2)}</span>
+                    </div>
+                    {deliveryFeeAdjusted > 0 && (
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Delivery Fee</span>
+                        <span>${deliveryFeeAdjusted.toFixed(2)}</span>
                       </div>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                          <label className="block mb-2 font-medium text-gray-700">City</label>
-                          <input 
-                            type="text" 
-                            name="city" 
-                            value={deliveryData.city} 
-                            onChange={handleDeliveryDataChange}
-                            className="w-full p-3 transition-all border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black" 
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block mb-2 font-medium text-gray-700">Province</label>
-                          <select 
-                            name="province" 
-                            value={deliveryData.province}
-                            onChange={handleDeliveryDataChange}
-                            className="w-full p-3 transition-all border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                            required
-                          >
-                            <option value="">Select Province</option>
-                            {provinces.map((province) => (
-                              <option key={province.code} value={province.code}>
-                                {province.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block mb-2 font-medium text-gray-700">Postal Code</label>
-                        <input 
-                          type="text" 
-                          name="postalCode" 
-                          value={deliveryData.postalCode} 
-                          onChange={handlePostalCodeChange}
-                          placeholder="A1A 1A1"
-                          maxLength="7"
-                          className="w-full p-3 uppercase transition-all border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black" 
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block mb-2 font-medium text-gray-700">Delivery Instructions</label>
-                        <textarea 
-                          name="instructions" 
-                          value={deliveryData.instructions} 
-                          onChange={handleDeliveryDataChange}
-                          placeholder="Apartment number, gate code, or other special instructions"
-                          className="w-full p-3 transition-all border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black" 
-                          rows="2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block mb-2 font-medium text-gray-700">Phone Number</label>
-                        <input 
-                          type="tel" 
-                          name="phoneNumber" 
-                          value={deliveryData.phoneNumber} 
-                          onChange={handleDeliveryDataChange}
-                          placeholder="(123) 456-7890"
-                          className="w-full p-3 transition-all border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-black" 
-                          required
-                        />
-                      </div>
+                    )}
+                    <div className="flex justify-between pt-3 text-lg font-bold text-black border-t">
+                      <span>Total</span>
+                      <span>${total.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleCheckout}
+                    disabled={isCheckoutDisabled || isProcessing}
+                    className="w-full py-6 mt-6 text-lg font-semibold transition-all duration-200 bg-orange-500 hover:bg-orange-600 text-white rounded-xl flex items-center justify-center space-x-2"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-5 h-5" />
+                        <span>Proceed to Checkout</span>
+                      </>
+                    )}
+                  </Button>
+
+                  {isCheckoutDisabled && (
+                    <div className="p-3 mt-2 text-sm text-amber-800 bg-amber-50 rounded-lg">
+                      {!pickupDetails && deliveryOption === "pickup"
+                        ? "Please select a pickup time to continue"
+                        : deliveryOption === "delivery"
+                          ? "Please fill in all required delivery information to continue"
+                          : "Please add items to your cart to continue"}
                     </div>
                   )}
                 </div>
-
-                <div className="p-6 mt-6 space-y-4 border border-gray-200 rounded-xl bg-gray-50">
-                  <h3 className="mb-4 text-xl font-semibold text-gray-800">Order Summary</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-gray-600">
-                      <span>Subtotal</span>
-                      <span className="font-medium">${summary.subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>GST/HST (5%)</span>
-                      <span className="font-medium">${summary.gst.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>PST (6%)</span>
-                      <span className="font-medium">${summary.pst.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Service Fee (0.5%)</span>
-                      <span className="font-medium">${summary.serviceFee.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Delivery Fee</span>
-                      <span className="font-medium">${deliveryFeeAdjusted.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between pt-4 border-t border-gray-200">
-                      <span className="text-xl font-semibold text-gray-800">Total</span>
-                      <span className="text-xl font-bold text-black">
-                        ${(summary.total + deliveryFeeAdjusted).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-6">
-                  <Link href="/checkout">
-                    <Button 
-                      className="w-full text-lg font-semibold transition-colors bg-black h-14 hover:bg-gray-900" 
-                      disabled={isUpdating}
-                    >
-                      Proceed to Checkout
-                    </Button>
-                  </Link>
-                </div>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CartPage;
+export default CartPage
+

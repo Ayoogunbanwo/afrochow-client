@@ -5,6 +5,7 @@ import Banner from '@/components/Banner';
 import DisplayRestaurant from '@/components/displayrestuarant';
 import FeaturedDishes from '@/components/Featureddishes';
 import { ChevronRight, Star, TrendingUp, MapPin } from 'lucide-react';
+import Image from 'next/image';
 
 const Restaurantpage = () => {
   return (

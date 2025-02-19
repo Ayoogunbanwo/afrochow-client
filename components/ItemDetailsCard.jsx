@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui.button"
 import { Clock, MapPin, Phone, Plus, Minus, Truck } from "lucide-react"
 
 export function ItemDetailsCard({
@@ -30,6 +30,7 @@ export function ItemDetailsCard({
           alt={item.name || "Item Image"}
           fill
           className="object-cover"
+          onLoad={() => console.log('Image loaded')}  // Replace onLoadingComplete with onLoad
         />
       </div>
       <div className="p-6">
@@ -89,18 +90,16 @@ export function ItemDetailsCard({
             </div>
             <div className="flex justify-between pt-2 mt-2 border-t border-gray-200">
               <span className="font-semibold">Total</span>
-              <span className="font-semibold">${Number(totalPrice).toFixed(2)}</span>
+              <span className="font-semibold">${totalPrice}</span>
             </div>
           </div>
 
           <Button
-            className={`w-full py-4 text-lg font-semibold text-white transition-colors ${
-              isSubmitting
-                ? "bg-gray-400 cursor-not-allowed"
-                : isAddedToCart
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-orange-500 hover:bg-orange-600"
-            }`}
+            className={`w-full py-4 text-lg font-semibold text-white transition-colors ${isSubmitting
+              ? "bg-gray-400 cursor-not-allowed"
+              : isAddedToCart
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-orange-500 hover:bg-orange-600"}`}
             onClick={onAddToCart}
             disabled={isSubmitting}
           >
@@ -127,7 +126,7 @@ export function ItemDetailsCard({
             ) : isAddedToCart ? (
               "Added to Cart ✓"
             ) : (
-              `Add to Cart - $${Number(totalPrice).toFixed(2)}`
+              `Add to Cart - $${totalPrice}`
             )}
           </Button>
           {errors.submit && <p className="mt-2 text-sm text-center text-red-500">{errors.submit}</p>}
@@ -136,4 +135,3 @@ export function ItemDetailsCard({
     </div>
   )
 }
-

@@ -15,7 +15,7 @@ const Banner = () => {
   ];
 
   return (
-    <div className="py-8 ">
+    <div className="py-8">
       <div className="container px-4 mx-auto">
         {/* Title */}
         <h2 className="mb-6 text-4xl font-bold text-center text-orange-900 animate-fade-down">
@@ -49,7 +49,7 @@ const Banner = () => {
           {["/ofada.jpg", "/ASORTED Food.jpg"].map((src, index) => (
             <div
               key={index}
-              className="w-full overflow-hidden rounded-lg shadow-lg transition-transform duration-300 hover:scale-102 animate-fade-up"
+              className="w-full overflow-hidden transition-transform duration-300 rounded-lg shadow-lg hover:scale-102 animate-fade-up"
               style={{ animationDelay: `${index * 300}ms` }}
             >
               <div className="relative w-full h-64">
@@ -58,7 +58,7 @@ const Banner = () => {
                   alt={index === 0 ? "Ofada rice" : "Assorted dishes"}
                   fill
                   className="object-cover transition-transform duration-300 hover:scale-105"
-                  priority={index === 0}
+                  priority
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
               </div>

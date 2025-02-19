@@ -1,4 +1,5 @@
 "use client";
+import { set } from "date-fns";
 import { createContext, useContext, useState, useEffect } from "react";
 
 const UserContext = createContext();
@@ -10,6 +11,8 @@ export const UserProvider = ({ children }) => {
   const [deliverytime, setDeliverytime] = useState(null);
   const [loading, setLoading] = useState(true); // Loading state for initial fetch
   const [isLoading, setIsLoading] = useState(false); // Loading state for async actions
+  const [openingtime , setopeningtime] = useState(null);
+  const [closingtime , setclosingtime] = useState(null);
 
   // Fetch the test data on initial mount
   useEffect(() => {
@@ -41,6 +44,8 @@ export const UserProvider = ({ children }) => {
       setFilteredTestData(store);
       setDeliveryFee(store.deliveryFee); // Update delivery fee for the store
       setDeliverytime(store.deliveryTime);
+      setopeningtime(store.openingHour);
+      setclosingtime(store.closingHour);
     }
   };
 
@@ -54,6 +59,8 @@ export const UserProvider = ({ children }) => {
         isLoading,
         deliveryFee,
         deliverytime,
+        openingtime,
+        closingtime,
         filterByStoreId,
         setDeliveryFee, // Expose function to manually set the delivery fee
       }}

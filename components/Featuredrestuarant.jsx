@@ -23,6 +23,7 @@ const FeaturedStoreCard = ({ store }) => {
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [error, setError] = useState(false);
   const { storeId, name, rating, openingHour, closingHour, categories, deliveryTime, popularItems } = store;
 
   const isOpen = useStoreOpenStatus(openingHour, closingHour);
@@ -38,19 +39,21 @@ const FeaturedStoreCard = ({ store }) => {
   };
 
   const renderImage = () => (
-    <div className="relative w-full h-48 overflow-hidden"> {/* Added overflow-hidden */}
-      <Image
-        src={imageUrl}
-        alt={name}
-        layout="fill"
-        objectFit="cover"
-        placeholder="blur"
-        blurDataURL={placeholderBlur}
-        onLoadingComplete={() => setImageLoaded(true)}
-        onError={() => console.error("Image failed to load")}
-        className={`transition duration-300 hover:scale-105 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-      />
-      {!imageLoaded && (
+    <div className="relative w-full h-48 overflow-hidden">
+      {!error ? (
+        <Image
+          src={imageUrl || "/fallback-image.jpg"}
+          alt={name || "Image"}
+          fill
+          placeholder="blur"
+          blurDataURL={placeholderBlur || "/fallback-placeholder.jpg"}
+          loading="lazy"
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setError(true)}
+          className={`transition-transform duration-300 ease-in-out hover:scale-105 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+          style={{ objectFit: "cover" }}
+        />
+      ) : (
         <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
       )}
     </div>
