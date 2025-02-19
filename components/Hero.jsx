@@ -14,7 +14,6 @@ const HeroSection = () => {
           fill
           quality={75}  // Optional: adjust image quality
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          priority
         />
       </div>
 

@@ -37,12 +37,6 @@ const Navbar = () => {
             </button>
           </div>
         </div>
-        {/* Mobile Search Bar */}
-        {isSmallScreen && isSearchOpen && (
-          <div className="py-4">
-            <SearchBar placeholder="Filter by location" />
-          </div>
-        )}
       </div>
     </nav>
   )

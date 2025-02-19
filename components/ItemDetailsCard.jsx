@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { Button } from "@/components/ui.button"
+import { Button } from "@/components/ui/button" // Corrected import path
 import { Clock, MapPin, Phone, Plus, Minus, Truck } from "lucide-react"
 
 export function ItemDetailsCard({
