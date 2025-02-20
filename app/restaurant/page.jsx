@@ -1,4 +1,6 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Banner from '@/components/Banner';
@@ -6,11 +8,57 @@ import DisplayRestaurant from '@/components/displayrestuarant';
 import FeaturedDishes from '@/components/Featureddishes';
 import { ChevronRight, Star, TrendingUp, MapPin } from 'lucide-react';
 import Image from 'next/image';
+import { useAuthContext } from '@/app/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 const Restaurantpage = () => {
+  const { auth, isAuthenticated } = useAuthContext();
+  const [userProfile, setUserProfile] = useState(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/customer'); // Redirect to login if not authenticated
+    } else {
+      fetchUserProfile();
+    }
+  }, [isAuthenticated]);
+
+  const fetchUserProfile = async () => {
+    try {
+      console.log({
+        email: auth.email,
+        access_token: auth.accessToken,
+        refresh_token: auth.refreshToken,
+      });
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.accessToken}`,
+        },
+        body: JSON.stringify({
+          email: auth.email,
+          access_token: auth.accessToken,
+          refresh_token: auth.refreshToken,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user profile');
+      }
+
+      const data = await response.json();
+      setUserProfile(data.user);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-orange-50">
-      <Navbar />
+      <Navbar user={userProfile} />
       <main className="flex-col">
         <Hero />
         <Banner />

@@ -9,14 +9,15 @@ export function FormProvider({ children }) {
     lastname: "",
     phone: "",
     street_address: "",
+    apartment_number: "",
     city: "",
     province: "",
     postalcode: "",
     country: "Canada",
-    apartment_number: "",
+    profile_image: null,
     email: "",
     password: "",
-    profile_image: null,
+    
   });
 
   return (

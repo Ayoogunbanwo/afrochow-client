@@ -266,6 +266,9 @@ const ProfileForm = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
+        if (errorData.errors && errorData.errors.email) {
+          throw new Error(errorData.errors.email[0]);
+        }
         throw new Error(errorData.message || "Failed to submit form");
       }
 

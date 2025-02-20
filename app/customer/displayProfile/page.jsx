@@ -1,49 +1,28 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Camera } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFormContext } from "@/app/context/Formcontext";
 import withAuth from '@/hooks/withAuth';
 
-const DisplayProfilePage = () => {
+const DisplayProfilePage = ({ user, isAuthenticated }) => {
   const { formData, setFormData } = useFormContext();
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth') ? JSON.parse(localStorage.getItem('auth')).accessToken : ''}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data');
-        }
-        const data = await response.json();
-        setFormData(data.user);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-
-    fetchUserData();
-  }, [setFormData]);
+    if (isAuthenticated && user) {
+      setFormData(user); // Populate form data with user data if authenticated
+    }
+  }, [isAuthenticated, user, setFormData]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -64,6 +43,7 @@ const DisplayProfilePage = () => {
       }
       const data = await response.json();
       console.log('Updated profile:', data);
+      localStorage.setItem('userProfile', JSON.stringify(data.user)); // Persist updated data
     } catch (error) {
       console.error('Error updating profile:', error);
     }
@@ -76,7 +56,7 @@ const DisplayProfilePage = () => {
       reader.onloadend = () => {
         setFormData(prev => ({
           ...prev,
-          profile_image: reader.result
+          profile_image: reader.result,
         }));
       };
       reader.readAsDataURL(file);
@@ -85,162 +65,90 @@ const DisplayProfilePage = () => {
 
   return (
     <div className="container max-w-4xl px-4 py-8 mx-auto">
-      <Card className="w-full">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-bold">Profile Information</CardTitle>
-            <Button 
-              onClick={() => isEditing ? handleSubmit() : setIsEditing(true)}
-              variant={isEditing ? "default" : "outline"}
-            >
-              {isEditing ? 'Save Changes' : 'Edit Profile'}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Profile Image Section */}
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <div className="flex items-center justify-center w-32 h-32 overflow-hidden bg-gray-100 rounded-full">
-                  {formData.profile_image ? (
-                    <img 
-                      src={formData.profile_image} 
-                      alt="Profile" 
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <Camera className="w-12 h-12 text-gray-400" />
+      {isAuthenticated ? (
+        <Card className="w-full">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl font-bold">Profile Information</CardTitle>
+              <Button 
+                onClick={() => setIsEditing(!isEditing)}
+                variant={isEditing ? "default" : "outline"}
+              >
+                {isEditing ? 'Save Changes' : 'Edit Profile'}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Profile Image Section */}
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <div className="flex items-center justify-center w-32 h-32 overflow-hidden bg-gray-100 rounded-full">
+                    {formData.profile_image ? (
+                      <img 
+                        src={formData.profile_image} 
+                        alt="Profile" 
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <Camera className="w-12 h-12 text-gray-400" />
+                    )}
+                  </div>
+                  {isEditing && (
+                    <label className="absolute bottom-0 right-0 p-2 text-white rounded-full cursor-pointer bg-primary">
+                      <Camera className="w-4 h-4" />
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                      />
+                    </label>
                   )}
                 </div>
-                {isEditing && (
-                  <label className="absolute bottom-0 right-0 p-2 text-white rounded-full cursor-pointer bg-primary">
-                    <Camera className="w-4 h-4" />
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                    />
-                  </label>
-                )}
               </div>
-            </div>
 
-            {/* Personal Information */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="firstname">First Name</Label>
-                <Input
-                  id="firstname"
-                  name="firstname"
-                  value={formData.firstname}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastname">Last Name</Label>
-                <Input
-                  id="lastname"
-                  name="lastname"
-                  value={formData.lastname}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
-            </div>
-
-            {/* Address Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Address Information</h3>
+              {/* Personal Information */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="apartment_number">Apartment Number</Label>
-                  <Input
-                    id="apartment_number"
-                    name="apartment_number"
-                    value={formData.apartment_number}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="street_address">Street Address</Label>
-                  <Input
-                    id="street_address"
-                    name="street_address"
-                    value={formData.street_address}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="province">Province</Label>
-                  <Input
-                    id="province"
-                    name="province"
-                    value={formData.province}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="postalcode">Postal Code</Label>
-                  <Input
-                    id="postalcode"
-                    name="postalcode"
-                    value={formData.postalcode}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="country">Country</Label>
-                  <Input
-                    id="country"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
+                {['firstname', 'lastname', 'email', 'phone'].map((field) => (
+                  <div key={field} className="space-y-2">
+                    <Label htmlFor={field}>{field.charAt(0).toUpperCase() + field.slice(1)}</Label>
+                    <Input
+                      id={field}
+                      name={field}
+                      type={field === 'email' ? 'email' : 'text'}
+                      value={formData[field] || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Address Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Address Information</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {['apartment_number', 'street_address', 'city', 'province', 'postalcode', 'country'].map((field) => (
+                    <div key={field} className="space-y-2">
+                      <Label htmlFor={field}>{field.replace('_', ' ').toUpperCase()}</Label>
+                      <Input
+                        id={field}
+                        name={field}
+                        value={formData[field] || ''}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      ) : (
+        <div>You must be logged in to view your profile.</div>
+      )}
     </div>
   );
 };

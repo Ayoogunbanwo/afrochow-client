@@ -1,16 +1,16 @@
-"use client"
-import React, { useState } from "react"
-import { User, ShoppingCart, ChevronDown, Search } from "lucide-react"
-import Link from "next/link"
-import SearchBar from "@/cards/SearchBar"
-import Logo from "@/components/Logo"
-import UserMenu from "@/components/UserMenu"
-import useWindowSize from "@/hooks/useWindowSize"
+"use client";
+import React, { useState } from "react";
+import { User, ShoppingCart, ChevronDown, Search } from "lucide-react";
+import Link from "next/link";
+import SearchBar from "@/cards/SearchBar";
+import Logo from "@/components/Logo";
+import UserMenu from "@/components/UserMenu";
+import useWindowSize from "@/hooks/useWindowSize";
 
-const Navbar = () => {
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const isSmallScreen = useWindowSize(768)
+const Navbar = ({ user }) => {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isSmallScreen = useWindowSize(768);
 
   return (
     <nav className="sticky top-0 z-50 w-full h-24 p-3 border-b shadow-sm bg-white/90 backdrop-blur-md">
@@ -28,7 +28,7 @@ const Navbar = () => {
               >
               </button>
             )}
-            <UserMenu isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+            <UserMenu isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} user={user} />
             <button
               className="p-2 text-orange-600 transition duration-300 rounded-full bg-orange-500/10 hover:bg-orange-500/20 focus:outline-none focus:ring-2 focus:ring-orange-300"
               aria-label="Shopping cart"
@@ -39,8 +39,8 @@ const Navbar = () => {
         </div>
       </div>
     </nav>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;
 
